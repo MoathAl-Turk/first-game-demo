@@ -6,8 +6,8 @@ const levelText = document.getElementById("levelText");
 const themes = {
     default: { pageBg: "#222", canvasBg: "#333", text: "white", player: "cyan", obstacles: "red", treasure: "gold" },
     purpleGreen: { pageBg: "#1a0530", canvasBg: "#300050", text: "#00ff00", player: "#00ff00", obstacles: "#800080", treasure: "#adff2f" },
-    // UPDATED: Player is now red in the Black & White theme
-    blackWhite: { pageBg: "#e0e0e0", canvasBg: "#ffffff", text: "#000000", player: "red", obstacles: "#555555", treasure: "#000000" }
+    // UPDATED: Player is red, Treasure is yellow in Black & White theme!
+    blackWhite: { pageBg: "#e0e0e0", canvasBg: "#ffffff", text: "#000000", player: "red", obstacles: "#555555", treasure: "yellow" }
 };
 let currentTheme = themes.default;
 
@@ -170,12 +170,14 @@ function draw() {
 
     // Draw Player
     if (!isDead) {
-        ctx.fillStyle = currentTheme.player;
         if (currentLevelIndex === 3) {
+            // FIX: Always white in Level 4 so it never blends in!
+            ctx.fillStyle = "white";
             ctx.fillRect(player.x - player.radius, player.y - player.radius, player.radius * 2, player.radius * 2);
-            ctx.fillStyle = "white"; ctx.font = "bold 16px sans-serif"; ctx.textAlign = "center";
+            ctx.font = "bold 16px sans-serif"; ctx.textAlign = "center";
             ctx.fillText(jokeMessage, player.x, player.y - 25);
         } else {
+            ctx.fillStyle = currentTheme.player;
             ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2); ctx.fill();
         }
 
@@ -186,7 +188,7 @@ function draw() {
 
         // Draw Stick if Attacking
         if (player.attackTimer > 0) {
-            ctx.fillStyle = "#8B4513"; // Brown color for the stick
+            ctx.fillStyle = "#8B4513"; // Brown stick
             if (player.facing === "right") ctx.fillRect(player.x, player.y - 4, 40, 8);
             else if (player.facing === "left") ctx.fillRect(player.x - 40, player.y - 4, 40, 8);
             else if (player.facing === "up") ctx.fillRect(player.x - 4, player.y - 40, 8, 40);
@@ -219,8 +221,8 @@ function update() {
 
             if (npc && !npc.isDead) {
                 let hit = false;
-                let attackReach = 65; 
-                let attackWidth = 40; 
+                let attackReach = 65; // Extended reach
+                let attackWidth = 40; // Extended width
 
                 if (player.facing === "right" && npc.x > player.x && npc.x - player.x < attackReach && Math.abs(npc.y - player.y) < attackWidth) hit = true;
                 if (player.facing === "left" && player.x > npc.x && player.x - npc.x < attackReach && Math.abs(npc.y - player.y) < attackWidth) hit = true;
