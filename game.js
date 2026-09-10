@@ -2,6 +2,7 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const levelText = document.getElementById("levelText");
 
+// --- 1. THEME SYSTEM ---
 const themes = {
     default: { pageBg: "#222", canvasBg: "#333", text: "white", player: "cyan", obstacles: "red", treasure: "gold" },
     purpleGreen: { pageBg: "#1a0530", canvasBg: "#300050", text: "#00ff00", player: "#00ff00", obstacles: "#800080", treasure: "#adff2f" },
@@ -16,13 +17,14 @@ function setTheme(themeName) {
     canvas.style.backgroundColor = currentTheme.canvasBg;
 }
 
+// --- 2. GAME DATA & LOGIC ---
 const levels = [
     { start: { x: 30, y: 200 }, treasure: { x: 530, y: 175, width: 50, height: 50 }, obstacles: [ { x: 150, y: 0, width: 30, height: 250 }, { x: 350, y: 150, width: 30, height: 250 } ] },
     { start: { x: 30, y: 30 }, treasure: { x: 530, y: 320, width: 50, height: 50 }, obstacles: [ { x: 100, y: 0, width: 30, height: 300 }, { x: 230, y: 100, width: 30, height: 300 }, { x: 360, y: 0, width: 30, height: 300 }, { x: 490, y: 100, width: 30, height: 300 } ] },
     { start: { x: 30, y: 200 }, treasure: { x: 530, y: 200, width: 50, height: 50 }, obstacles: [ { x: 100, y: 0, width: 40, height: 160 }, { x: 100, y: 240, width: 40, height: 160 }, { x: 250, y: 80, width: 40, height: 320 }, { x: 400, y: 0, width: 40, height: 320 } ] },
     { start: { x: 30, y: 200 }, treasure: { x: 530, y: 200, width: 50, height: 50 }, obstacles: [ { x: 150, y: 0, width: 20, height: 320 }, { x: 300, y: 80, width: 20, height: 320 }, { x: 450, y: 0, width: 20, height: 320 } ] },
     { // LEVEL 5: Scrolling Combat Level
-        width: 1400, // Longer level!
+        width: 1400, 
         start: { x: 30, y: 200 },
         treasure: { x: 1300, y: 175, width: 50, height: 50 },
         obstacles: [ 
@@ -36,7 +38,6 @@ const levels = [
 ];
 
 let currentLevelIndex = 0;
-// NEW Player properties: facing, attack frames, dialogue text
 let player = { x: 0, y: 0, radius: 15, speed: 4, facing: "right", attackTimer: 0, canAttack: true, text: "" };
 let treasure = {};
 let obstacles = [];
@@ -44,7 +45,7 @@ let npc = null;
 let keys = {};
 let isTransitioning = false; 
 let isDead = false; 
-let cameraX = 0; // NEW: Camera offset
+let cameraX = 0; 
 
 // Dialogue tracking
 let jokeMessage = "";
@@ -83,9 +84,8 @@ function loadLevel(index) {
     } 
     else if (index === 4) {
         levelText.innerText = "Level 5";
-        isPitchBlack = true; // Level 5 is also a black void
+        isPitchBlack = true; 
         
-        // NPC Dialogue Sequence
         npc.text = "where did u come from ???";
         dialogueTimers.push(setTimeout(() => { 
             npc.text = ""; 
@@ -105,7 +105,6 @@ function loadLevel(index) {
 window.addEventListener("keydown", (e) => keys[e.key] = true);
 window.addEventListener("keyup", (e) => keys[e.key] = false);
 
-// Mobile & On-Screen Buttons
 function bindButton(btnId, keyName) {
     const btn = document.getElementById(btnId);
     btn.addEventListener("touchstart", (e) => { e.preventDefault(); keys[keyName] = true; });
@@ -118,7 +117,7 @@ bindButton("btn-up", "ArrowUp");
 bindButton("btn-down", "ArrowDown");
 bindButton("btn-left", "ArrowLeft");
 bindButton("btn-right", "ArrowRight");
-bindButton("btn-hit", "e"); // Binds the UI Hit button to "e"
+bindButton("btn-hit", "e"); 
 
 function drawHexagon(x, y, r, color) {
     ctx.fillStyle = color;
@@ -130,8 +129,8 @@ function drawHexagon(x, y, r, color) {
     ctx.fill();
 }
 
+// --- 3. RENDER SHAPES ---
 function draw() {
-    // 1. Draw Background
     if (isPitchBlack) {
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -139,11 +138,10 @@ function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    // NEW: Apply Camera Offset!
     ctx.save();
     ctx.translate(-cameraX, 0);
 
-    // 2. Draw Treasure
+    // Draw Treasure
     if (treasure.isOpen) {
         ctx.strokeStyle = currentTheme.treasure; ctx.lineWidth = 4;
         ctx.strokeRect(treasure.x + 2, treasure.y + 2, treasure.width - 4, treasure.height - 4);
@@ -152,26 +150,24 @@ function draw() {
         ctx.fillRect(treasure.x, treasure.y, treasure.width, treasure.height);
     }
 
-    // 3. Draw Obstacles
+    // Draw Obstacles
     ctx.fillStyle = currentTheme.obstacles;
     obstacles.forEach(obs => ctx.fillRect(obs.x, obs.y, obs.width, obs.height));
 
-    // 4. Draw NPC (Hexagon)
+    // Draw NPC
     if (npc && !npc.isDead) {
         drawHexagon(npc.x, npc.y, npc.radius, "magenta");
         
-        // NPC HP Bar
         ctx.fillStyle = "red"; ctx.fillRect(npc.x - 15, npc.y - 35, 30, 5);
         ctx.fillStyle = "green"; ctx.fillRect(npc.x - 15, npc.y - 35, npc.hp * 10, 5);
         
-        // NPC Text
         if (npc.text) {
             ctx.fillStyle = "white"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center";
             ctx.fillText(npc.text, npc.x, npc.y - 45);
         }
     }
 
-    // 5. Draw Player
+    // Draw Player
     if (!isDead) {
         ctx.fillStyle = currentTheme.player;
         if (currentLevelIndex === 3) {
@@ -182,63 +178,53 @@ function draw() {
             ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2); ctx.fill();
         }
 
-        // Floating Player Text
         if (player.text) {
             ctx.fillStyle = "white"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center";
             ctx.fillText(player.text, player.x, player.y - 25);
         }
 
-        // Draw Sword if Attacking
-     // Draw Stick if Attacking
+        // Draw Stick if Attacking
         if (player.attackTimer > 0) {
-            ctx.fillStyle = "#8B4513"; // Brown color for the stick
-            
-            // Starting at the player's exact center makes it look like it's coming out of the circle
-            if (player.facing === "right") {
-                ctx.fillRect(player.x, player.y - 4, 40, 8);
-            } else if (player.facing === "left") {
-                ctx.fillRect(player.x - 40, player.y - 4, 40, 8);
-            } else if (player.facing === "up") {
-                ctx.fillRect(player.x - 4, player.y - 40, 8, 40);
-            } else if (player.facing === "down") {
-                ctx.fillRect(player.x - 4, player.y, 8, 40);
-            }
+            ctx.fillStyle = "#8B4513"; 
+            if (player.facing === "right") ctx.fillRect(player.x, player.y - 4, 40, 8);
+            else if (player.facing === "left") ctx.fillRect(player.x - 40, player.y - 4, 40, 8);
+            else if (player.facing === "up") ctx.fillRect(player.x - 4, player.y - 40, 8, 40);
+            else if (player.facing === "down") ctx.fillRect(player.x - 4, player.y, 8, 40);
         }
     }
-    ctx.restore(); // Stop applying camera offset for UI elements
+    ctx.restore(); 
 }
 
+// --- 4. LOGIC & COLLISIONS ---
 function update() {
     if (isTransitioning || isDead) return; 
 
-    // --- MOVEMENT & FACING ---
     if (keys["ArrowUp"] || keys["w"]) { player.y -= player.speed; player.facing = "up"; }
     if (keys["ArrowDown"] || keys["s"]) { player.y += player.speed; player.facing = "down"; }
     if (keys["ArrowLeft"] || keys["a"]) { player.x -= player.speed; player.facing = "left"; }
     if (keys["ArrowRight"] || keys["d"]) { player.x += player.speed; player.facing = "right"; }
 
-    // Keep player inside the level bounds
     let levelWidth = levels[currentLevelIndex].width || 600;
     player.x = Math.max(player.radius, Math.min(levelWidth - player.radius, player.x));
     player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
 
-    // --- CAMERA CALCULATION ---
-    // Smoothly track the player if the level is wide
     cameraX = Math.max(0, Math.min(player.x - canvas.width / 2, levelWidth - canvas.width));
 
     // --- COMBAT LOGIC ---
     if (keys["e"]) {
         if (player.canAttack) {
             player.canAttack = false;
-            player.attackTimer = 15; // Sword stays out for 15 frames
+            player.attackTimer = 15; 
 
-            // Check if sword hits NPC
             if (npc && !npc.isDead) {
                 let hit = false;
-                if (player.facing === "right" && npc.x > player.x && npc.x - player.x < 50 && Math.abs(npc.y - player.y) < 30) hit = true;
-                if (player.facing === "left" && player.x > npc.x && player.x - npc.x < 50 && Math.abs(npc.y - player.y) < 30) hit = true;
-                if (player.facing === "up" && player.y > npc.y && player.y - npc.y < 50 && Math.abs(npc.x - player.x) < 30) hit = true;
-                if (player.facing === "down" && npc.y > player.y && npc.y - player.y < 50 && Math.abs(npc.x - player.x) < 30) hit = true;
+                let attackReach = 65; 
+                let attackWidth = 40; 
+
+                if (player.facing === "right" && npc.x > player.x && npc.x - player.x < attackReach && Math.abs(npc.y - player.y) < attackWidth) hit = true;
+                if (player.facing === "left" && player.x > npc.x && player.x - npc.x < attackReach && Math.abs(npc.y - player.y) < attackWidth) hit = true;
+                if (player.facing === "up" && player.y > npc.y && player.y - npc.y < attackReach && Math.abs(npc.x - player.x) < attackWidth) hit = true;
+                if (player.facing === "down" && npc.y > player.y && npc.y - player.y < attackReach && Math.abs(npc.x - player.x) < attackWidth) hit = true;
 
                 if (hit) {
                     npc.hp--;
@@ -251,11 +237,10 @@ function update() {
             }
         }
     } else {
-        player.canAttack = true; // Must release the button to swing again
+        player.canAttack = true; 
     }
     if (player.attackTimer > 0) player.attackTimer--;
 
-    // --- COLLISIONS ---
     // Wall Collision
     obstacles.forEach(obs => {
         if (player.x + player.radius > obs.x && player.x - player.radius < obs.x + obs.width &&
@@ -270,12 +255,12 @@ function update() {
         }
     });
 
-    // NPC Body Collision (If player runs into the NPC while it is alive, they die)
+    // NPC Body Collision
     if (npc && !npc.isDead) {
         let dx = player.x - npc.x;
         let dy = player.y - npc.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < player.radius + npc.radius - 5) { // -5 gives a tiny bit of forgiveness
+        if (distance < player.radius + npc.radius - 5) { 
             isDead = true; 
             alert("You touched the weird hexagon! Hit the Respawn button to start over.");
         }
