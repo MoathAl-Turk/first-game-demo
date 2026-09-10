@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Treasure Dash - Open Chest</title>
+    <title>Treasure Dash - Geometric</title>
     <style>
         body { 
             background: #222; display: flex; flex-direction: column;
@@ -41,21 +41,7 @@
         const ctx = canvas.getContext("2d");
         const levelText = document.getElementById("levelText");
 
-        // --- 1. LOAD GRAPHICS ---
-        const birdImg = new Image();
-        birdImg.src = "bird.png";
-
-        const spikeImg = new Image();
-        spikeImg.src = "spikes.png";
-
-        // NEW: Two separate chest images!
-        const chestClosedImg = new Image();
-        chestClosedImg.src = "chest.png";
-
-        const chestOpenImg = new Image();
-        chestOpenImg.src = "treasure.png";
-
-        // --- 2. THEME SYSTEM ---
+        // --- 1. THEME SYSTEM ---
         const themes = {
             default: { pageBg: "#222", canvasBg: "#333", text: "white", player: "cyan", obstacles: "red", treasure: "gold" },
             purpleGreen: { pageBg: "#1a0530", canvasBg: "#300050", text: "#00ff00", player: "#00ff00", obstacles: "#800080", treasure: "#adff2f" },
@@ -71,7 +57,7 @@
             canvas.style.backgroundColor = currentTheme.canvasBg;
         }
 
-        // --- 3. GAME DATA & LOGIC ---
+        // --- 2. GAME DATA & LOGIC ---
         const levels = [
             { // LEVEL 1
                 start: { x: 30, y: 200 },
@@ -95,63 +81,53 @@
         let treasure = {};
         let obstacles = [];
         let keys = {};
-        
-        // NEW: A switch to freeze the game while the chest opens
         let isTransitioning = false; 
 
         function loadLevel(index) {
             let levelData = levels[index];
             player.x = levelData.start.x; player.y = levelData.start.y;
             
-            // NEW: Add a property to remember if the chest is open or closed
             treasure = { x: levelData.treasure.x, y: levelData.treasure.y, width: levelData.treasure.width, height: levelData.treasure.height, isOpen: false }; 
             
             obstacles = levelData.obstacles;
             levelText.innerText = "Level " + (index + 1);
             keys = {}; 
-            isTransitioning = false; // Unfreeze the game!
+            isTransitioning = false; 
         }
 
         window.addEventListener("keydown", (e) => keys[e.key] = true);
         window.addEventListener("keyup", (e) => keys[e.key] = false);
 
-        // --- 4. RENDER GRAPHICS ---
+        // --- 3. RENDER SHAPES ---
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // NEW: Decide which chest image to use based on treasure.isOpen
-            let activeChestImg = treasure.isOpen ? chestOpenImg : chestClosedImg;
-
-            if (activeChestImg.complete && activeChestImg.naturalWidth !== 0) {
-                ctx.drawImage(activeChestImg, treasure.x, treasure.y, treasure.width, treasure.height);
+            // Draw Treasure
+            if (treasure.isOpen) {
+                // Draw a hollow square to show it was "opened"
+                ctx.strokeStyle = currentTheme.treasure;
+                ctx.lineWidth = 4;
+                ctx.strokeRect(treasure.x + 2, treasure.y + 2, treasure.width - 4, treasure.height - 4);
             } else {
+                // Draw normal solid square
                 ctx.fillStyle = currentTheme.treasure;
                 ctx.fillRect(treasure.x, treasure.y, treasure.width, treasure.height);
             }
 
-            obstacles.forEach(obs => {
-                if (spikeImg.complete && spikeImg.naturalWidth !== 0) {
-                    ctx.drawImage(spikeImg, obs.x, obs.y, obs.width, obs.height);
-                } else {
-                    ctx.fillStyle = currentTheme.obstacles;
-                    ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-                }
-            });
+            // Draw Obstacles
+            ctx.fillStyle = currentTheme.obstacles;
+            obstacles.forEach(obs => ctx.fillRect(obs.x, obs.y, obs.width, obs.height));
 
-            if (birdImg.complete && birdImg.naturalWidth !== 0) {
-                ctx.drawImage(birdImg, player.x - player.radius, player.y - player.radius, player.radius * 2, player.radius * 2);
-            } else {
-                ctx.fillStyle = currentTheme.player;
-                ctx.beginPath();
-                ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
+            // Draw Player
+            ctx.fillStyle = currentTheme.player;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
         }
 
-        // --- 5. LOGIC & COLLISIONS ---
+        // --- 4. LOGIC & COLLISIONS ---
         function update() {
-            // NEW: If the chest is opening, skip the movement code so the player freezes
-            if (isTransitioning) return; 
+            if (isTransitioning) return; // Freeze movement during transition
 
             if (keys["ArrowUp"] || keys["w"]) player.y -= player.speed;
             if (keys["ArrowDown"] || keys["s"]) player.y += player.speed;
@@ -167,7 +143,7 @@
                     player.y + player.radius > obs.y &&
                     player.y - player.radius < obs.y + obs.height) {
                     
-                    alert("Ouch! You hit the spikes. Starting over from Level 1.");
+                    alert("Ouch! You hit a wall. Starting over from Level 1.");
                     currentLevelIndex = 0; 
                     loadLevel(currentLevelIndex);
                 }
@@ -178,11 +154,9 @@
                 player.y + player.radius > treasure.y &&
                 player.y - player.radius < treasure.y + treasure.height) {
                 
-                // NEW: Open the chest and freeze the game
-                treasure.isOpen = true;
-                isTransitioning = true;
+                treasure.isOpen = true; // Changes the drawing to a hollow box
+                isTransitioning = true; // Freezes player
                 
-                // NEW: Wait 500 milliseconds, THEN do the level change logic
                 setTimeout(() => {
                     currentLevelIndex++; 
                     if (currentLevelIndex === 3) {
@@ -199,7 +173,7 @@
                         currentLevelIndex = 0; 
                     }
                     loadLevel(currentLevelIndex);
-                }, 500); // 500ms delay
+                }, 500);
             }
         }
 
