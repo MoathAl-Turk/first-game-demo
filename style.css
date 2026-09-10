@@ -83,38 +83,30 @@ button:disabled {
 #btn-right { grid-column: 3; grid-row: 2; }
 
 /* Special styling for the directional buttons */
-.d-btn {
+d-btn {
     background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 2px solid white;
-    border-radius: 10px;
-    font-size: 24px;
-    margin: 0;
-    padding: 0;
-    
-    /* Prevent text selection and zooming on mobile */
-    user-select: none;
-    touch-action: none;
+    color: white; border: 2px solid white; border-radius: 10px;
+    font-size: 24px; user-select: none; touch-action: none; cursor: pointer;
 }
+.d-btn:active { background: rgba(255, 255, 255, 0.6); }
 
-.d-btn:active {
-    background: rgba(255, 255, 255, 0.6);
-}
-
-/* Update Respawn button so it matches the bottom-right style */
-#respawnBtn {
+/* NEW: Hit Button for the right thumb */
+.action-btn {
     position: absolute;
     bottom: 20px;
     right: 20px;
-    background: #8b0000;
-    color: white;
-    border: 2px solid white;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    font-family: monospace;
+    background: rgba(255, 165, 0, 0.4); /* Orange tint */
+    color: white; border: 2px solid white; border-radius: 10px;
+    font-size: 18px; font-weight: bold; width: 100px; height: 100px;
+    user-select: none; touch-action: none; cursor: pointer;
 }
+.action-btn:active { background: rgba(255, 165, 0, 0.8); }
 
-#respawnBtn:hover {
-    background: #ff0000;
+/* MOVED: Respawn button to the top right */
+#respawnBtn {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: #8b0000; color: white; border: 2px solid white;
+    padding: 10px 20px; font-size: 16px; cursor: pointer; font-family: monospace;
 }
+#respawnBtn:hover { background: #ff0000; }
