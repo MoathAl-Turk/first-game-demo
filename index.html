@@ -2,14 +2,115 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Platformer Game</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Treasure Dash</title>
+    <style>
+        body { 
+            background: #222; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            color: white;
+            font-family: sans-serif;
+        }
+        canvas { 
+            background: #333; 
+            border: 2px solid #fff; 
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    
-    <!-- Make sure the script loads at the very end -->
-    <script src="game.js"></script>
+    <h2>Click here first, then use WASD or Arrows to move!</h2>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // 1. Define our game objects
+        let player = { x: 30, y: 200, radius: 15, speed: 4 };
+        let treasure = { x: 530, y: 175, width: 50, height: 50 };
+        
+        // Two simple walls to dodge
+        let obstacles = [
+            { x: 150, y: 0, width: 30, height: 250 },
+            { x: 350, y: 150, width: 30, height: 250 }
+        ];
+
+        // 2. Track Keyboard Inputs
+        let keys = {};
+        window.addEventListener("keydown", (e) => keys[e.key] = true);
+        window.addEventListener("keyup", (e) => keys[e.key] = false);
+
+        // 3. Draw everything on the screen
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Treasure (Gold)
+            ctx.fillStyle = "gold";
+            ctx.fillRect(treasure.x, treasure.y, treasure.width, treasure.height);
+
+            // Draw Obstacles (Red)
+            ctx.fillStyle = "red";
+            obstacles.forEach(obs => ctx.fillRect(obs.x, obs.y, obs.width, obs.height));
+
+            // Draw Player (Cyan Circle)
+            ctx.fillStyle = "cyan";
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 4. Update math and check for collisions
+        function update() {
+            // Movement
+            if (keys["ArrowUp"] || keys["w"]) player.y -= player.speed;
+            if (keys["ArrowDown"] || keys["s"]) player.y += player.speed;
+            if (keys["ArrowLeft"] || keys["a"]) player.x -= player.speed;
+            if (keys["ArrowRight"] || keys["d"]) player.x += player.speed;
+
+            // Keep player inside the canvas walls
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+
+            // Collision with Red Obstacles (Die and restart)
+            obstacles.forEach(obs => {
+                if (player.x + player.radius > obs.x &&
+                    player.x - player.radius < obs.x + obs.width &&
+                    player.y + player.radius > obs.y &&
+                    player.y - player.radius < obs.y + obs.height) {
+                    
+                    // Reset player to start
+                    player.x = 30;
+                    player.y = 200;
+                }
+            });
+
+            // Collision with Gold Treasure (Win!)
+            if (player.x + player.radius > treasure.x &&
+                player.x - player.radius < treasure.x + treasure.width &&
+                player.y + player.radius > treasure.y &&
+                player.y - player.radius < treasure.y + treasure.height) {
+                
+                alert("You found the treasure! The game will now restart.");
+                player.x = 30; // Send back to start
+                player.y = 200;
+                keys = {}; // Clear inputs so they don't keep moving
+            }
+        }
+
+        // 5. The Engine Loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game!
+        gameLoop();
+    </script>
 </body>
 </html>
