@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Treasure Dash</title>
+    <title>Treasure Dash - Combat Update</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,9 +14,10 @@
 
     <h2>Click the game box, then use WASD or Arrows!</h2>
     <h3 id="levelText">Level 1</h3>
+    
     <canvas id="gameCanvas" width="600" height="400"></canvas>
 
-    <!-- NEW: Mobile D-Pad -->
+    <!-- Movement D-Pad (Bottom Left) -->
     <div id="d-pad">
         <button id="btn-up" class="d-btn">▲</button>
         <button id="btn-left" class="d-btn">◄</button>
@@ -24,6 +25,10 @@
         <button id="btn-down" class="d-btn">▼</button>
     </div>
 
+    <!-- NEW: Hit Button (Bottom Right) -->
+    <button id="btn-hit" class="action-btn">⚔️ HIT (E)</button>
+
+    <!-- MOVED: Respawn Button (Top Right) -->
     <button id="respawnBtn" onclick="location.reload()">Respawn</button>
 
     <script src="game.js"></script>
