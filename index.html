@@ -16,7 +16,14 @@
     <h3 id="levelText">Level 1</h3>
     <canvas id="gameCanvas" width="600" height="400"></canvas>
 
-    <!-- NEW: Respawn button that refreshes the page -->
+    <!-- NEW: Mobile D-Pad -->
+    <div id="d-pad">
+        <button id="btn-up" class="d-btn">▲</button>
+        <button id="btn-left" class="d-btn">◄</button>
+        <button id="btn-right" class="d-btn">►</button>
+        <button id="btn-down" class="d-btn">▼</button>
+    </div>
+
     <button id="respawnBtn" onclick="location.reload()">Respawn</button>
 
     <script src="game.js"></script>
