@@ -34,6 +34,11 @@ const levels = [
         start: { x: 30, y: 200 },
         treasure: { x: 530, y: 200, width: 50, height: 50 },
         obstacles: [ { x: 100, y: 0, width: 40, height: 160 }, { x: 100, y: 240, width: 40, height: 160 }, { x: 250, y: 80, width: 40, height: 320 }, { x: 400, y: 0, width: 40, height: 320 } ]
+    },
+    { // LEVEL 4 (The Joke Level!)
+        start: { x: 30, y: 200 },
+        treasure: { x: 530, y: 200, width: 50, height: 50 },
+        obstacles: [ { x: 150, y: 0, width: 20, height: 320 }, { x: 300, y: 80, width: 20, height: 320 }, { x: 450, y: 0, width: 20, height: 320 } ]
     }
 ];
 
@@ -44,6 +49,11 @@ let obstacles = [];
 let keys = {};
 let isTransitioning = false; 
 
+// NEW: Variables to track Level 4's joke state
+let jokeMessage = "";
+let jokeTimer = null;
+let isPitchBlack = false;
+
 function loadLevel(index) {
     let levelData = levels[index];
     player.x = levelData.start.x; 
@@ -52,7 +62,23 @@ function loadLevel(index) {
     treasure = { x: levelData.treasure.x, y: levelData.treasure.y, width: levelData.treasure.width, height: levelData.treasure.height, isOpen: false }; 
     
     obstacles = levelData.obstacles;
-    levelText.innerText = "Level " + (index + 1);
+    
+    if (index === 3) {
+        levelText.innerText = "???";
+        // Reset the joke sequence
+        jokeMessage = "Where am I?";
+        isPitchBlack = false;
+        clearTimeout(jokeTimer);
+        
+        // After 2 seconds, turn the background black and change the text
+        jokeTimer = setTimeout(() => {
+            isPitchBlack = true;
+            jokeMessage = " what???";
+        }, 2000);
+    } else {
+        levelText.innerText = "Level " + (index + 1);
+    }
+    
     keys = {}; 
     isTransitioning = false; 
 }
@@ -62,7 +88,13 @@ window.addEventListener("keyup", (e) => keys[e.key] = false);
 
 // --- 3. RENDER SHAPES ---
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // If we are in the dark phase of Level 4, draw the canvas completely black
+    if (currentLevelIndex === 3 && isPitchBlack) {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
 
     // Draw Treasure
     if (treasure.isOpen) {
@@ -80,9 +112,21 @@ function draw() {
 
     // Draw Player
     ctx.fillStyle = currentTheme.player;
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-    ctx.fill();
+    if (currentLevelIndex === 3) {
+        // Draw a SQUARE for Level 4
+        ctx.fillRect(player.x - player.radius, player.y - player.radius, player.radius * 2, player.radius * 2);
+        
+        // Draw the floating joke text above the square
+        ctx.fillStyle = "white";
+        ctx.font = "bold 16px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(jokeMessage, player.x, player.y - 25);
+    } else {
+        // Draw normal CIRCLE
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
 }
 
 // --- 4. LOGIC & COLLISIONS ---
@@ -97,15 +141,23 @@ function update() {
     player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
     player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
 
+    // Collision Logic
     obstacles.forEach(obs => {
         if (player.x + player.radius > obs.x &&
             player.x - player.radius < obs.x + obs.width &&
             player.y + player.radius > obs.y &&
             player.y - player.radius < obs.y + obs.height) {
             
-            alert("Ouch! You hit a wall. Starting over from Level 1.");
-            currentLevelIndex = 0; 
-            loadLevel(currentLevelIndex);
+            if (currentLevelIndex === 3) {
+                // Joke Level Death: Trap them on level 4!
+                alert("u killed me...");
+                loadLevel(3); 
+            } else {
+                // Normal Death
+                alert("Ouch! You hit a wall. Starting over from Level 1.");
+                currentLevelIndex = 0; 
+                loadLevel(0);
+            }
         }
     });
 
@@ -129,10 +181,11 @@ function update() {
             }
             
             if (currentLevelIndex >= levels.length) {
-                alert("You beat the whole game! Restarting...");
-                currentLevelIndex = 0; 
+                alert("You beat the whole game! (Use the Respawn button to play again)");
+                // Trap them at the end until they manually respawn!
+            } else {
+                loadLevel(currentLevelIndex);
             }
-            loadLevel(currentLevelIndex);
         }, 500);
     }
 }
