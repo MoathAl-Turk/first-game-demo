@@ -48,8 +48,9 @@ let treasure = {};
 let obstacles = [];
 let keys = {};
 let isTransitioning = false; 
+let isDead = false; // NEW: tracks if the player is dead so they can't move
 
-// NEW: Variables to track Level 4's joke state
+// Joke Level Variables
 let jokeMessage = "";
 let jokeTimer = null;
 let isPitchBlack = false;
@@ -65,12 +66,10 @@ function loadLevel(index) {
     
     if (index === 3) {
         levelText.innerText = "???";
-        // Reset the joke sequence
         jokeMessage = "Where am I?";
         isPitchBlack = false;
         clearTimeout(jokeTimer);
         
-        // After 2 seconds, turn the background black and change the text
         jokeTimer = setTimeout(() => {
             isPitchBlack = true;
             jokeMessage = " what???";
@@ -81,6 +80,7 @@ function loadLevel(index) {
     
     keys = {}; 
     isTransitioning = false; 
+    isDead = false; // Bring the player back to life
 }
 
 window.addEventListener("keydown", (e) => keys[e.key] = true);
@@ -88,7 +88,6 @@ window.addEventListener("keyup", (e) => keys[e.key] = false);
 
 // --- 3. RENDER SHAPES ---
 function draw() {
-    // If we are in the dark phase of Level 4, draw the canvas completely black
     if (currentLevelIndex === 3 && isPitchBlack) {
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -110,28 +109,31 @@ function draw() {
     ctx.fillStyle = currentTheme.obstacles;
     obstacles.forEach(obs => ctx.fillRect(obs.x, obs.y, obs.width, obs.height));
 
-    // Draw Player
-    ctx.fillStyle = currentTheme.player;
-    if (currentLevelIndex === 3) {
-        // Draw a SQUARE for Level 4
-        ctx.fillRect(player.x - player.radius, player.y - player.radius, player.radius * 2, player.radius * 2);
-        
-        // Draw the floating joke text above the square
-        ctx.fillStyle = "white";
-        ctx.font = "bold 16px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(jokeMessage, player.x, player.y - 25);
-    } else {
-        // Draw normal CIRCLE
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-        ctx.fill();
+    // Draw Player (Hide if dead)
+    if (!isDead) {
+        ctx.fillStyle = currentTheme.player;
+        if (currentLevelIndex === 3) {
+            // SQUARE for Level 4
+            ctx.fillRect(player.x - player.radius, player.y - player.radius, player.radius * 2, player.radius * 2);
+            
+            // Text
+            ctx.fillStyle = "white";
+            ctx.font = "bold 16px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(jokeMessage, player.x, player.y - 25);
+        } else {
+            // CIRCLE for other levels
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }
 
 // --- 4. LOGIC & COLLISIONS ---
 function update() {
-    if (isTransitioning) return; 
+    // If transitioning or dead, skip all movement/collision logic
+    if (isTransitioning || isDead) return; 
 
     if (keys["ArrowUp"] || keys["w"]) player.y -= player.speed;
     if (keys["ArrowDown"] || keys["s"]) player.y += player.speed;
@@ -141,7 +143,7 @@ function update() {
     player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
     player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
 
-    // Collision Logic
+    // Wall Collision
     obstacles.forEach(obs => {
         if (player.x + player.radius > obs.x &&
             player.x - player.radius < obs.x + obs.width &&
@@ -153,15 +155,15 @@ function update() {
                 alert("u killed me...");
                 loadLevel(3); 
             } else {
-                // Normal Death
-                alert("Ouch! You hit a wall. Starting over from Level 1.");
-                currentLevelIndex = 0; 
-                loadLevel(0);
+                // NEW Normal Death: Freeze the game and force them to respawn
+                isDead = true; 
+                alert("You died! Hit the Respawn button at the bottom right to start over.");
             }
         }
     });
 
-    if (player.x + player.radius > treasure.x &&
+    // Treasure Collision
+    if (!isDead && player.x + player.radius > treasure.x &&
         player.x - player.radius < treasure.x + treasure.width &&
         player.y + player.radius > treasure.y &&
         player.y - player.radius < treasure.y + treasure.height) {
@@ -171,9 +173,10 @@ function update() {
         
         setTimeout(() => {
             currentLevelIndex++; 
+            
             if (currentLevelIndex === 3) {
                 const bwBtn = document.getElementById("bwButton");
-                if (bwBtn.disabled) {
+                if (bwBtn && bwBtn.disabled) {
                     bwBtn.disabled = false;
                     bwBtn.innerText = "🔓 Black & White (Unlocked!)";
                     alert("Achievement Unlocked: Black & White Theme!");
@@ -181,8 +184,10 @@ function update() {
             }
             
             if (currentLevelIndex >= levels.length) {
-                alert("You beat the whole game! (Use the Respawn button to play again)");
-                // Trap them at the end until they manually respawn!
+                // They beat Level 4! Auto-reset back to the very beginning.
+                alert("You beat the whole game! Resetting back to Level 1...");
+                currentLevelIndex = 0; 
+                loadLevel(0);
             } else {
                 loadLevel(currentLevelIndex);
             }
