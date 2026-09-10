@@ -189,12 +189,20 @@ function draw() {
         }
 
         // Draw Sword if Attacking
+     // Draw Stick if Attacking
         if (player.attackTimer > 0) {
-            ctx.fillStyle = "white"; // Sword is white
-            if (player.facing === "right") ctx.fillRect(player.x + 10, player.y - 4, 30, 8);
-            else if (player.facing === "left") ctx.fillRect(player.x - 40, player.y - 4, 30, 8);
-            else if (player.facing === "up") ctx.fillRect(player.x - 4, player.y - 40, 8, 30);
-            else if (player.facing === "down") ctx.fillRect(player.x - 4, player.y + 10, 8, 30);
+            ctx.fillStyle = "#8B4513"; // Brown color for the stick
+            
+            // Starting at the player's exact center makes it look like it's coming out of the circle
+            if (player.facing === "right") {
+                ctx.fillRect(player.x, player.y - 4, 40, 8);
+            } else if (player.facing === "left") {
+                ctx.fillRect(player.x - 40, player.y - 4, 40, 8);
+            } else if (player.facing === "up") {
+                ctx.fillRect(player.x - 4, player.y - 40, 8, 40);
+            } else if (player.facing === "down") {
+                ctx.fillRect(player.x - 4, player.y, 8, 40);
+            }
         }
     }
     ctx.restore(); // Stop applying camera offset for UI elements
