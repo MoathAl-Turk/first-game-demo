@@ -64,3 +64,57 @@ button:disabled {
 #respawnBtn:hover {
     background: #ff0000;
 }
+/* Add this to the bottom of your existing CSS */
+
+#d-pad {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: grid;
+    grid-template-columns: 60px 60px 60px;
+    grid-template-rows: 60px 60px;
+    gap: 5px;
+}
+
+/* Arrange the buttons into a cross shape */
+#btn-up { grid-column: 2; grid-row: 1; }
+#btn-left { grid-column: 1; grid-row: 2; }
+#btn-down { grid-column: 2; grid-row: 2; }
+#btn-right { grid-column: 3; grid-row: 2; }
+
+/* Special styling for the directional buttons */
+.d-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid white;
+    border-radius: 10px;
+    font-size: 24px;
+    margin: 0;
+    padding: 0;
+    
+    /* Prevent text selection and zooming on mobile */
+    user-select: none;
+    touch-action: none;
+}
+
+.d-btn:active {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+/* Update Respawn button so it matches the bottom-right style */
+#respawnBtn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: #8b0000;
+    color: white;
+    border: 2px solid white;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: monospace;
+}
+
+#respawnBtn:hover {
+    background: #ff0000;
+}
