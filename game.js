@@ -86,6 +86,31 @@ function loadLevel(index) {
 window.addEventListener("keydown", (e) => keys[e.key] = true);
 window.addEventListener("keyup", (e) => keys[e.key] = false);
 
+// --- NEW: MOBILE CONTROLS ---
+function bindDpad(btnId, keyName) {
+    const btn = document.getElementById(btnId);
+    
+    // Touch events for mobile phones
+    btn.addEventListener("touchstart", (e) => {
+        e.preventDefault(); // Stops the screen from scrolling
+        keys[keyName] = true;
+    });
+    btn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        keys[keyName] = false;
+    });
+
+    // Mouse events for testing the buttons on your computer
+    btn.addEventListener("mousedown", () => keys[keyName] = true);
+    btn.addEventListener("mouseup", () => keys[keyName] = false);
+    btn.addEventListener("mouseleave", () => keys[keyName] = false); // Stops movement if mouse slides off button
+}
+
+bindDpad("btn-up", "ArrowUp");
+bindDpad("btn-down", "ArrowDown");
+bindDpad("btn-left", "ArrowLeft");
+bindDpad("btn-right", "ArrowRight");
+
 // --- 3. RENDER SHAPES ---
 function draw() {
     if (currentLevelIndex === 3 && isPitchBlack) {
