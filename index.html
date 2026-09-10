@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Treasure Dash</title>
+    <title>Treasure Dash - Levels</title>
     <style>
         body { 
             background: #222; 
@@ -20,53 +20,101 @@
             border: 2px solid #fff; 
             margin-top: 10px;
         }
+        h2, h3 { margin: 5px 0; }
     </style>
 </head>
 <body>
-    <h2>Click here first, then use WASD or Arrows to move!</h2>
+    <h2>Click the game box, then use WASD or Arrows!</h2>
+    <h3 id="levelText">Level 1</h3>
     <canvas id="gameCanvas" width="600" height="400"></canvas>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
+        const levelText = document.getElementById("levelText");
 
-        // 1. Define our game objects
-        let player = { x: 30, y: 200, radius: 15, speed: 4 };
-        let treasure = { x: 530, y: 175, width: 50, height: 50 };
-        
-        // Two simple walls to dodge
-        let obstacles = [
-            { x: 150, y: 0, width: 30, height: 250 },
-            { x: 350, y: 150, width: 30, height: 250 }
+        // 1. The Level Blueprints
+        const levels = [
+            { // LEVEL 1: The original two walls
+                start: { x: 30, y: 200 },
+                treasure: { x: 530, y: 175, width: 50, height: 50 },
+                obstacles: [
+                    { x: 150, y: 0, width: 30, height: 250 },
+                    { x: 350, y: 150, width: 30, height: 250 }
+                ]
+            },
+            { // LEVEL 2: The zigzag
+                start: { x: 30, y: 30 },
+                treasure: { x: 530, y: 320, width: 50, height: 50 },
+                obstacles: [
+                    { x: 100, y: 0, width: 30, height: 300 },
+                    { x: 230, y: 100, width: 30, height: 300 },
+                    { x: 360, y: 0, width: 30, height: 300 },
+                    { x: 490, y: 100, width: 30, height: 300 }
+                ]
+            },
+            { // LEVEL 3: The narrow maze
+                start: { x: 30, y: 200 },
+                treasure: { x: 530, y: 200, width: 50, height: 50 },
+                obstacles: [
+                    { x: 100, y: 0, width: 40, height: 160 },
+                    { x: 100, y: 240, width: 40, height: 160 },
+                    { x: 250, y: 80, width: 40, height: 320 },
+                    { x: 400, y: 0, width: 40, height: 320 }
+                ]
+            }
         ];
 
-        // 2. Track Keyboard Inputs
+        let currentLevelIndex = 0;
+        
+        // Game state variables
+        let player = { x: 0, y: 0, radius: 15, speed: 4 };
+        let treasure = {};
+        let obstacles = [];
         let keys = {};
+
+        // 2. Load Level Function
+        function loadLevel(index) {
+            let levelData = levels[index];
+            
+            // Set up player, treasure, and obstacles based on the blueprint
+            player.x = levelData.start.x;
+            player.y = levelData.start.y;
+            treasure = levelData.treasure;
+            obstacles = levelData.obstacles;
+            
+            // Update the text on the webpage
+            levelText.innerText = "Level " + (index + 1);
+            
+            // Clear keys so the player doesn't accidentally run into a wall immediately
+            keys = {}; 
+        }
+
+        // 3. Track Keyboard Inputs
         window.addEventListener("keydown", (e) => keys[e.key] = true);
         window.addEventListener("keyup", (e) => keys[e.key] = false);
 
-        // 3. Draw everything on the screen
+        // 4. Draw everything on the screen
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Treasure (Gold)
+            // Draw Treasure
             ctx.fillStyle = "gold";
             ctx.fillRect(treasure.x, treasure.y, treasure.width, treasure.height);
 
-            // Draw Obstacles (Red)
+            // Draw Obstacles
             ctx.fillStyle = "red";
             obstacles.forEach(obs => ctx.fillRect(obs.x, obs.y, obs.width, obs.height));
 
-            // Draw Player (Cyan Circle)
+            // Draw Player
             ctx.fillStyle = "cyan";
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        // 4. Update math and check for collisions
+        // 5. Update math and check for collisions
         function update() {
-            // Movement
             if (keys["ArrowUp"] || keys["w"]) player.y -= player.speed;
             if (keys["ArrowDown"] || keys["s"]) player.y += player.speed;
             if (keys["ArrowLeft"] || keys["a"]) player.x -= player.speed;
@@ -76,40 +124,43 @@
             player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
             player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
 
-            // Collision with Red Obstacles (Die and restart)
+            // Collision with Red Obstacles (Restart current level)
             obstacles.forEach(obs => {
                 if (player.x + player.radius > obs.x &&
                     player.x - player.radius < obs.x + obs.width &&
                     player.y + player.radius > obs.y &&
                     player.y - player.radius < obs.y + obs.height) {
                     
-                    // Reset player to start
-                    player.x = 30;
-                    player.y = 200;
+                    loadLevel(currentLevelIndex); // Reloads the same level
                 }
             });
 
-            // Collision with Gold Treasure (Win!)
+            // Collision with Gold Treasure (Next Level!)
             if (player.x + player.radius > treasure.x &&
                 player.x - player.radius < treasure.x + treasure.width &&
                 player.y + player.radius > treasure.y &&
                 player.y - player.radius < treasure.y + treasure.height) {
                 
-                alert("You found the treasure! The game will now restart.");
-                player.x = 30; // Send back to start
-                player.y = 200;
-                keys = {}; // Clear inputs so they don't keep moving
+                currentLevelIndex++; // Move to next level
+                
+                if (currentLevelIndex >= levels.length) {
+                    alert("You beat all the levels! Restarting game...");
+                    currentLevelIndex = 0; // Reset to level 1
+                }
+                
+                loadLevel(currentLevelIndex);
             }
         }
 
-        // 5. The Engine Loop
+        // 6. The Engine Loop
         function gameLoop() {
             update();
             draw();
             requestAnimationFrame(gameLoop);
         }
 
-        // Start the game!
+        // Initialize the first level and start the game!
+        loadLevel(currentLevelIndex);
         gameLoop();
     </script>
 </body>
